@@ -7,22 +7,22 @@ zouxiu_client = Zouxiu_client()
 request_data = [
                 {"productDetailUrl": "http://www.xiu.com",
                  "xopSupplierItems": [
-                 {"productId": "0000000",
-                 "productName": "test0000003",
+                 {"productId": "00000004",
+                 "productName": "test0000004",
                  "brandNameZhs": "Prada",
                  "productDesc": "Prada",
-                 "itemId": "test0000003",
+                 "itemId": "test0000004",
                  "stock":1,
                  "supplyPrice":23.6,
                  "catName": "fengyi"}
                  ],
                  "brandNameZhs":"普拉达",
-                 "productName":"test0000003",
-                 "productId":"test0000003"
+                 "productName":"test0000004",
+                 "productId":"00000004"
                 }
                ]
-print(zouxiu_client.product(data=request_data))
-#print(zouxiu_client.getitem(data={}))
+#print(zouxiu_client.product(data=request_data))
+print(zouxiu_client.getitem(data={}))
 
 
 '''
