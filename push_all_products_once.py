@@ -73,7 +73,5 @@ def push_all_products_once():
     map(functools.partial(create_one_product, client=zouxiu_client), erp_products)
     print("All products are done")
 
-#push_all_products_once()
-zouxiu_client = Zouxiu_client()
-print(zouxiu_client.getitem(data={}))
+push_all_products_once()
 
