@@ -18,3 +18,9 @@ class Zouxiu_client(Baseclient):
         self.set_data(data)
         return self.req_put().content
 
+    def update_item_stock(self, data):
+        self.set_path('/api/supplier/item/stock')
+        self.set_data(data)
+        return self.req_put().content
+
+
