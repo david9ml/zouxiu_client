@@ -96,13 +96,18 @@ def convert_one_product(node):
     pt_sku = get_or_empty_str(node, "pt_sku")
     return {pt_sku: [node]}
 
-def merge_two_nodes(node1, node2):
+def merge_two(node1, node2):
     key_of_node2 = node2.keys()[0]
     if node1.has_key(key_of_node2):
         node1[key_of_node2].append(node2[key_of_node2][0])
     else:
         node1[key_of_node2] = node2[key_of_node2]
     return node1
+
+def convert_one_product_zouxiu(item_dict):
+    #{'母产品id': [母产品下的所有产品列表], ......}
+    pt_sku = item_dict['productId']
+    return {pt_sku: [item_dict]}
 
 def update_one_stock(item_dict, erp_products_dict, client):
     print(item_dict['productId'])
@@ -118,28 +123,91 @@ def update_one_stock(item_dict, erp_products_dict, client):
                 if int(get_or_empty_str(item, "quatity")) == int(item_dict['stock']):
                     print("zouxiu stock == erp_stock, not updating stock...")
                 else:
-                    print("zouxiu stock != erp_stock, need updating stock...")
+                    print("<-zouxiu stock != erp_stock, need updating stock...")
+                    response = client.update_item_stock(data=[{"itemId":item_dict['itemId'], "stock":get_or_empty_str(item, "quatity")}])
+                    print(response)
+                    print("update complete!->")
                 erp_products_dict[item_dict['productId']].remove(item)
+                if erp_products_dict[item_dict['productId']] == []:
+                    erp_products_dict.pop(item_dict['productId'], None)
     if erp_item == None:
-        print("zouxiu item not in erp_stock, set stock 0 in zouxiu...")
+        print("<-zouxiu item not in erp_stock, set stock 0 in zouxiu...")
+        response = client.update_item_stock(data=[{"itemId":item_dict['itemId'], "stock":0}])
+        print("update complete!->")
 
+def upload_one_erp_product(item_list, zouxiu_items_dict, client):
+    parent_sku = item_list[0]
+    for node in item_list[1]:
+        model = get_or_empty_str(node, "model")
+        material = get_or_empty_str(node, "material")
+        color = get_or_empty_str(node, "color")
+        pt_sku = get_or_empty_str(node, "pt_sku")
+        pt_name = get_or_empty_str(node, "pt_name")
+        price_eu = get_or_empty_str(node, "price_eu")
+        price = get_or_empty_str(node, "price")
+        name = get_or_empty_str(node, "name")
+        size = get_or_empty_str(node, "size")
+        brand = get_or_empty_str(node, "brand")
+        cate = get_or_empty_str(node, "cate")
+        quantity = get_or_empty_str(node, "quatity")
+        code = get_or_empty_str(node, "code")
+        image_str = get_image_str(brand, model, material, color)
+        if zouxiu_items_dict.has_key(parent_sku):
+            print("Parent exist, we create item")
+        else:
+            print("Parent not exist, we create product")
+            request_data = [
+                            {"productDetailUrl": "http://www.yvogue.com",
+                            "xopSupplierItems": [
+                            {"productId": pt_sku,
+                            "productName": name,
+                            "brandNameZhs": brand,
+                            "productDesc": model+'_'+material+'_'+color,
+                            "itemId": code,
+                            "stock":quantity,
+                            "supplyPrice":int(float(price)*0.72129),
+                            "mainPicture":image_str,
+                            "catName": cate}
+                            ],
+                            "brandNameZhs": brand,
+                            "productName": pt_name,
+                            "productId": pt_sku
+                            }
+                        ]
+            print(client.product(data=request_data))
+            zouxiu_items_dict[parent_sku] = {}
+            time.sleep(1)
 def update_all_products():
     stock_doc = minidom.parse("./morning.inventory.hk.xml")
-    erp_products = stock_doc.getElementsByTagName("product")
-    erp_products_dict = reduce(merge_two_nodes, map(convert_one_product, erp_products))
-
     zouxiu_client = Zouxiu_client()
-    print(len(erp_products))
-    print(len(erp_products_dict))
-    #map(functools.partial(update_one_product, client={}), erp_products_dict.iteritems())
-    print("###################################################################################")
-    print("Firstly, we update stocks!")
-    print("###################################################################################")
-    map(functools.partial(update_one_stock, erp_products_dict = erp_products_dict, client=zouxiu_client), get_all_products(zouxiu_client=zouxiu_client))
 
-    print("###################################################################################")
+    erp_products = stock_doc.getElementsByTagName("product")
+    erp_products_dict = reduce(merge_two, map(convert_one_product, erp_products))
+    all_zouxiu_items = get_all_products(zouxiu_client=zouxiu_client)
+    all_zouxiu_items_dict = reduce(merge_two, map(convert_one_product_zouxiu, all_zouxiu_items))
+
+    #map(functools.partial(update_one_product, client={}), erp_products_dict.iteritems())
+    print("--------------------------------------------------------------------------------------------------")
+    print("Firstly, we update stocks!")
+    print("--------------------------------------------------------------------------------------------------")
+    time.sleep(3)
+    map(functools.partial(update_one_stock, erp_products_dict = erp_products_dict, client=zouxiu_client), all_zouxiu_items)
+    print("First step finished!")
+    time.sleep(5)
+
+    #print("NEW PRODUCTS:")
+    #print(erp_products_dict)
+    print("--------------------------------------------------------------------------------------------------")
+    print("Secondly, we create new products!")
+    print("--------------------------------------------------------------------------------------------------")
+    time.sleep(3)
+    #print(erp_products_dict)
+    map(functools.partial(upload_one_erp_product, zouxiu_items_dict=all_zouxiu_items_dict, client=zouxiu_client), erp_products_dict.iteritems())
+
+
+    print("--------------------------------------------------------------------------------------------------")
     print("All products are updated!")
-    print("###################################################################################")
+    print("--------------------------------------------------------------------------------------------------")
     return True
 
 update_all_products()
