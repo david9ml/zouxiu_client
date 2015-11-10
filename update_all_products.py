@@ -153,9 +153,24 @@ def upload_one_erp_product(item_list, zouxiu_items_dict, client):
         code = get_or_empty_str(node, "code")
         image_str = get_image_str(brand, model, material, color)
         if zouxiu_items_dict.has_key(parent_sku):
-            print("Parent exist, we create item")
+            print("<-Parent exist, we create item")
+            request_data = [
+                            {"itemId": code,
+                            "itemColor": color,
+                            "productId": pt_sku,
+                            "itemSize":size,
+                            "supplyPrice":int(float(price)*0.72129),
+                            "marketPrice":int(float(price)*0.72129),
+                            "sellPrice":int(float(price)*0.72129),
+                            "mainPicture":image_str,
+                            "catName": cate,
+                            "stock": quantity}
+                            ]
+            print(client.item(data=request_data))
+            print("Creating item complete->")
+            time.sleep(1)
         else:
-            print("Parent not exist, we create product")
+            print("<-Parent not exist, we create product")
             request_data = [
                             {"productDetailUrl": "http://www.yvogue.com",
                             "xopSupplierItems": [
@@ -166,6 +181,8 @@ def upload_one_erp_product(item_list, zouxiu_items_dict, client):
                             "itemId": code,
                             "stock":quantity,
                             "supplyPrice":int(float(price)*0.72129),
+                            "marketPrice":int(float(price)*0.72129),
+                            "sellPrice":int(float(price)*0.72129),
                             "mainPicture":image_str,
                             "catName": cate}
                             ],
@@ -175,6 +192,7 @@ def upload_one_erp_product(item_list, zouxiu_items_dict, client):
                             }
                         ]
             print(client.product(data=request_data))
+            print("Creating product complete->")
             zouxiu_items_dict[parent_sku] = {}
             time.sleep(1)
 def update_all_products():
@@ -204,11 +222,23 @@ def update_all_products():
     #print(erp_products_dict)
     map(functools.partial(upload_one_erp_product, zouxiu_items_dict=all_zouxiu_items_dict, client=zouxiu_client), erp_products_dict.iteritems())
 
-
     print("--------------------------------------------------------------------------------------------------")
     print("All products are updated!")
     print("--------------------------------------------------------------------------------------------------")
+    print(erp_products_dict)
     return True
 
-update_all_products()
+while True:
+    while True:
+        try:
+            update_all_products()
+            break
+        except:
+            traceback.print_exc()
+            print("Network failure, retry in 60secs...")
+            time.sleep(60)
+    import gc
+    gc.collect()
+    print("sleep 5*60 sec...")
+    time.sleep(5*60)
 

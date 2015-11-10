@@ -13,6 +13,11 @@ class Zouxiu_client(Baseclient):
         self.set_data(data)
         return self.req_post().content
 
+    def item(self, data):
+        self.set_path('/api/supplier/item')
+        self.set_data(data)
+        return self.req_post().content
+
     def remove_all_products(self, data):
         self.set_path('/api/supplier/delete/deleteallbysupplierid')
         self.set_data(data)
