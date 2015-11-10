@@ -109,32 +109,35 @@ def convert_one_product_zouxiu(item_dict):
     pt_sku = item_dict['productId']
     return {pt_sku: [item_dict]}
 
-def update_one_stock(item_dict, erp_products_dict, updated_count, client):
+def update_one_stock(item_dict, erp_products_dict, client):
     print(item_dict['productId'])
     print("zouxiu stock:")
     print(item_dict['stock'])
     print("erp stock:")
     erp_item = None
+    global updated_count_total
     if erp_products_dict.has_key(item_dict['productId']):
         for item in erp_products_dict[item_dict['productId']]:
             if get_or_empty_str(item, "code") == item_dict['itemId']:
                 erp_item = item
                 print(get_or_empty_str(item, "quatity"))
-                if int(get_or_empty_str(item, "quatity")) == int(item_dict['stock']):
+                if int(get_or_empty_str(item, "quatity")) == int(item_dict['stock']) :
                     print("zouxiu stock == erp_stock, not updating stock...")
                 else:
+                    #if get_or_empty_str(item, "code")=="9600000818912":
                     print("<-zouxiu stock != erp_stock, need updating stock...")
                     response = client.update_item_stock(data=[{"itemId":item_dict['itemId'], "stock":get_or_empty_str(item, "quatity")}])
                     print(response)
-                    updated_count += 1
+                    updated_count_total += 1
                     print("update complete!->")
+                    #time.sleep(100)
                 erp_products_dict[item_dict['productId']].remove(item)
                 if erp_products_dict[item_dict['productId']] == []:
                     erp_products_dict.pop(item_dict['productId'], None)
     if erp_item == None:
         print("<-zouxiu item not in erp_stock, set stock 0 in zouxiu...")
         response = client.update_item_stock(data=[{"itemId":item_dict['itemId'], "stock":0}])
-        updated_count += 1
+        updated_count_total += 1
         print("update complete!->")
 
 def upload_one_erp_product(item_list, zouxiu_items_dict, client):
@@ -197,6 +200,7 @@ def upload_one_erp_product(item_list, zouxiu_items_dict, client):
             print("Creating product complete->")
             zouxiu_items_dict[parent_sku] = {}
             time.sleep(1)
+
 def update_all_products():
     stock_doc = minidom.parse("./morning.inventory.hk.xml")
     zouxiu_client = Zouxiu_client()
@@ -211,11 +215,10 @@ def update_all_products():
     print("Firstly, we update stocks!")
     print("--------------------------------------------------------------------------------------------------")
     time.sleep(3)
-    updated_count = 0
-    map(functools.partial(update_one_stock, erp_products_dict = erp_products_dict, updated_count=updated_count, client=zouxiu_client), all_zouxiu_items)
+    map(functools.partial(update_one_stock, erp_products_dict = erp_products_dict, client=zouxiu_client), all_zouxiu_items)
     print("First step finished!")
     print("updated:")
-    print(updated_count)
+    print(updated_count_total)
     time.sleep(5)
 
     #print("NEW PRODUCTS:")
@@ -236,6 +239,7 @@ def update_all_products():
 while True:
     while True:
         try:
+            updated_count_total = 0
             update_all_products()
             break
         except:

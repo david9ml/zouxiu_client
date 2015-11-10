@@ -1,10 +1,11 @@
 import functools
 
-def remove_one(x, y):
+def remove_one(x):
+    global y
     print(y)
-    y.remove(x)
+    y+=1
     return x
 
-y = [0,1,2]
-map(functools.partial(remove_one, y=y), [0,1,2])
+y = 1
+map(functools.partial(remove_one), [0,1,2])
 print(y)
