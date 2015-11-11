@@ -42,6 +42,11 @@ class Baseclient(object):
         response = requests.request('PUT', self.url+self.path, json=self.data, params=self.params)
         return response
 
+    def req_get(self):
+        response = requests.request('GET', self.url+self.path, json=self.data, params=self.params)
+        return response
+
+
     def req_post(self):
         print(self.data)
         print(self.params)

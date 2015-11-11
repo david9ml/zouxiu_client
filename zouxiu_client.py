@@ -8,6 +8,11 @@ class Zouxiu_client(Baseclient):
         self.set_data(data)
         return self.req_put().content
 
+    def getonlineitem(self, data):
+        self.set_path('/api/supplier/item/getonlineitem')
+        self.set_data(data)
+        return self.req_get().content
+
     def product(self, data):
         self.set_path('/api/supplier/product')
         self.set_data(data)
