@@ -136,9 +136,12 @@ def update_one_stock(item_dict, erp_products_dict, client):
                     erp_products_dict.pop(item_dict['productId'], None)
     if erp_item == None:
         print("<-zouxiu item not in erp_stock, set stock 0 in zouxiu...")
-        response = client.update_item_stock(data=[{"itemId":item_dict['itemId'], "stock":0}])
-        updated_count_total += 1
-        print("update complete!->")
+        if int(item_dict['stock']) == 0:
+            print("zouxiu stock already 0, update complete!->")
+        else:
+            response = client.update_item_stock(data=[{"itemId":item_dict['itemId'], "stock":0}])
+            updated_count_total += 1
+            print("zouxiu stock already 0, set 0, update complete!->")
 
 def upload_one_erp_product(item_list, zouxiu_items_dict, client):
     parent_sku = item_list[0]
