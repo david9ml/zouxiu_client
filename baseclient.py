@@ -26,8 +26,10 @@ class Baseclient(object):
         response = requests.request('PUT', self.url+self.path, json=request_data, headers=self.headers, params=self.params)
         content = response.content
         response_dict = json.loads(content)
+        print("--------------------token!!!-----------------------")
+        print(response_dict)
+        print("--------------------token!!!-----------------------")
         self.params['token'] = response_dict['data']
-        print(response_dict['data'])
         return response_dict['data']
 
     def print_secrets(self):

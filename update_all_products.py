@@ -110,6 +110,7 @@ def convert_one_product_zouxiu(item_dict):
     return {pt_sku: [item_dict]}
 
 def update_one_stock(item_dict, erp_products_dict, client):
+    print(item_dict)
     print(item_dict['productId'])
     print("zouxiu stock:")
     print(item_dict['stock'])
@@ -136,7 +137,7 @@ def update_one_stock(item_dict, erp_products_dict, client):
                     erp_products_dict.pop(item_dict['productId'], None)
     if erp_item == None:
         print("<-zouxiu item not in erp_stock, set stock 0 in zouxiu...")
-        if int(item_dict['stock']) == 0:
+        if item_dict['stock'] == None or int(item_dict['stock']) == 0:
             print("zouxiu stock already 0, update complete!->")
         else:
             response = client.update_item_stock(data=[{"itemId":item_dict['itemId'], "stock":0}])
