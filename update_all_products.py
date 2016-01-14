@@ -43,7 +43,7 @@ def get_image_str(brand, model, material, color):
 
 def push_all_products_once():
     zouxiu_client = Zouxiu_client()
-    stock_doc = minidom.parse("./morning.inventory.hk.xml")
+    stock_doc = minidom.parse("/home/yvogue/sync_erp/zouxiu_client/morning.inventory.hk.xml")
     erp_products = stock_doc.getElementsByTagName("product")
     map(functools.partial(update_one_product, client=zouxiu_client), erp_products)
     print("All products are done")
@@ -122,7 +122,9 @@ def update_one_stock(item_dict, erp_products_dict, client):
             if get_or_empty_str(item, "code") == item_dict['itemId']:
                 erp_item = item
                 print(get_or_empty_str(item, "quatity"))
-                if item_dict['stock'] == None or int(get_or_empty_str(item, "quatity")) == int(item_dict['stock']) :
+                if get_or_empty_str(item, "quatity") == None and item_dict['stock'] == None:
+                    print("zouxiu stock == erp_stock, not updating stock...")
+                elif item_dict['stock']!= None and (int(get_or_empty_str(item, "quatity")) == int(item_dict['stock'])):
                     print("zouxiu stock == erp_stock, not updating stock...")
                 else:
                     #if get_or_empty_str(item, "code")=="9600000818912":
@@ -206,7 +208,7 @@ def upload_one_erp_product(item_list, zouxiu_items_dict, client):
             time.sleep(1)
 
 def update_all_products():
-    stock_doc = minidom.parse("./morning.inventory.hk.xml")
+    stock_doc = minidom.parse("/home/yvogue/sync_erp/zouxiu_client/morning.inventory.hk.xml")
     zouxiu_client = Zouxiu_client()
 
     erp_products = stock_doc.getElementsByTagName("product")
